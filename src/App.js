@@ -1,25 +1,50 @@
-import logo from './logo.svg';
-import './App.css';
+import * as React from 'react'
+import {fetchPokemon, PokemonDataView, PokemonForm, PokemonInfoFallback} from './pokemon'
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+function PokemonInfo({pokemonName}) {
+  const [pokemonInfo,setPokemonInfo] = React.useState(null)
+  const [error,setError] = React.useState(null)
+  React.useEffect(()=>{
+    if (!pokemonName) {
+      return
+    }
+    setPokemonInfo(null)
+    setError(null)
+    fetchPokemon(pokemonName)
+        .then(pokemonData => setPokemonInfo(pokemonData))
+        .catch(error => setError(error))
+  },[pokemonName])
+  if (error){
+    return (
+        <div role="alert">
+          There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+        </div>
+    )
+  }else if (!pokemonName) {
+    return 'Submit a pokemon'
+  } else if (!pokemonInfo) {
+    return <PokemonInfoFallback name={pokemonName} />
+  } else {
+    return <PokemonDataView pokemon={pokemonInfo} />
+  }
 }
 
-export default App;
+function App() {
+  const [pokemonName, setPokemonName] = React.useState('')
+
+  function handleSubmit(newPokemonName) {
+    setPokemonName(newPokemonName)
+  }
+
+  return (
+      <div className="pokemon-info-app">
+        <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
+        <hr />
+        <div className="pokemon-info">
+          <PokemonInfo pokemonName={pokemonName} />
+        </div>
+      </div>
+  )
+}
+
+export default App
